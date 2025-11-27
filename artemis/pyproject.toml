@@ -1,0 +1,13 @@
+[project]
+name = "artemis"
+version = "0.1.0"
+description = "Agent Reputation & Trust Environment for Macro-scale Interaction Simulation."
+readme = "README.md"
+requires-python = ">=3.13.4"
+dependencies = [
+    "black>=25.11.0",
+    "isort>=7.0.0",
+    "pytest>=9.0.1",
+    "qwen-agent>=0.0.10",
+    "python-dateutil>=2.8.2",
+]
