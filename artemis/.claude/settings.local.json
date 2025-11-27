@@ -3,7 +3,10 @@
     "allow": [
       "Bash(python artemis/main.py:*)",
       "Bash(uv sync:*)",
-      "Bash(uv run:*)"
+      "Bash(uv run:*)",
+      "Bash(pytest:*)",
+      "Bash(cat:*)",
+      "Bash(git mv:*)"
     ],
     "deny": [],
     "ask": []
