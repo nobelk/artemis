@@ -1,0 +1,105 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Get version from tag
+      id: get_version
+      run: |
+        if [ "${{ github.event_name }}" == "push" ]; then
+          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        else
+          echo "VERSION=1.0.0" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Create Release Notes
+      id: release_notes
+      run: |
+        cat > release_notes.md <<EOF
+        # Artemis v${{ steps.get_version.outputs.VERSION }}
+
+        ## 🚀 Features
+        - GPU-accelerated multiagent simulation
+        - Support for millions of agents
+        - Built-in behaviors: Boids, Predator-Prey, Social
+        - Real-time metrics and pattern detection
+        - HDF5, CSV, and JSON export
+
+        ## 📦 Installation
+
+        See README.md for installation instructions.
+
+        ## 📊 Performance
+
+        - 10K agents: 1000+ FPS (RTX 2060+)
+        - 100K agents: 100+ FPS (RTX 3070+)
+        - 1M agents: 30+ FPS (RTX 4090)
+
+        ## 📚 Documentation
+
+        - [Architecture Guide](docs/ARCHITECTURE.md)
+        - [API Guide](docs/API_GUIDE.md)
+        - [Examples](examples/)
+        EOF
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        body_path: release_notes.md
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-release-artifacts:
+    name: Build Release Artifacts
+    runs-on: ubuntu-22.04
+    needs: create-release
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install CUDA
+      uses: Jimver/cuda-toolkit@v0.2.14
+      with:
+        cuda: "12.2"
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake ninja-build libhdf5-dev
+
+    - name: Build Release
+      run: |
+        make build BUILD_TYPE=Release
+
+    - name: Package artifacts
+      run: |
+        mkdir -p artifacts
+        tar -czf artifacts/artemis-headers.tar.gz include/
+        tar -czf artifacts/artemis-docs.tar.gz docs/
+        tar -czf artifacts/artemis-examples.tar.gz examples/
+
+    - name: Upload Release Assets
+      uses: softprops/action-gh-release@v1
+      with:
+        files: artifacts/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

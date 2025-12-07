@@ -1,0 +1,92 @@
+# Artemis Configuration: Boids Flocking Simulation
+# This example demonstrates large-scale flocking behavior
+
+name: "boids_100k"
+description: "Large-scale flocking behavior study with 100,000 agents"
+random_seed: 42
+
+# Agent Types
+agent_types:
+  - name: "boid"
+    count: 100000
+    max_speed: 5.0
+    perception_radius: 15.0
+    collision_radius: 1.0
+    mass: 1.0
+
+    # Boids behavior weights
+    behavior_weights:
+      separation: 1.5
+      alignment: 1.0
+      cohesion: 1.0
+
+# Environment Configuration
+environment:
+  type: "grid_2d"
+  dimensions: [1000, 1000]
+  topology: "torus"      # Options: bounded, torus, infinite
+  cell_size: 50.0        # For spatial indexing (2x perception_radius)
+
+# Temporal Configuration
+temporal:
+  max_steps: 10000
+  dt: 0.1
+  scheduler: "synchronous"  # Options: synchronous, random, staged
+
+# GPU Configuration
+gpu:
+  device_id: 0            # -1 for auto-select
+  threads_per_block: 256
+  use_streams: true
+
+# Analysis Configuration
+analysis:
+  metrics:
+    - "polarization"
+    - "clustering_coefficient"
+    - "neighbor_distribution"
+    - "center_of_mass"
+    - "average_velocity"
+
+  frequency: 10           # Compute every 10 steps
+  export_timeseries: true
+  output_format: "hdf5"   # Options: hdf5, csv, json
+
+  # Pattern detection (optional)
+  patterns:
+    - type: "clustering"
+      parameters:
+        epsilon: 10.0
+        min_points: 5
+
+# Behavior Configuration
+behaviors:
+  - type: "boids"
+    parameters:
+      separation_radius: 5.0
+      alignment_radius: 15.0
+      cohesion_radius: 15.0
+      separation_weight: 1.5
+      alignment_weight: 1.0
+      cohesion_weight: 1.0
+      max_force: 0.5
+      max_speed: 5.0
+
+# I/O Configuration
+io:
+  output_directory: "./output/boids_100k"
+  enable_checkpointing: true
+  checkpoint_interval: 1000
+  compress_output: true
+  compression_level: 6
+
+# Visualization (optional)
+visualization:
+  enabled: false
+  window_width: 1920
+  window_height: 1080
+  fps_limit: 60
+  point_size: 2.0
+  show_velocity_vectors: false
+  show_spatial_grid: false
+  colormap: "agent_type"
